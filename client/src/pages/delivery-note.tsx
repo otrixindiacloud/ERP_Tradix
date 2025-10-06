@@ -108,7 +108,15 @@ export default function DeliveryNote() {
       setEnquiryItems([]);
       setEnquiryItemsLoading(true);
       try {
-        let enquiryId = selectedDeliveryNote?.salesOrder?.quotation?.enquiryId;
+        let enquiryId = undefined as string | undefined;
+        // Prefer quotationId, fetch quote to resolve enquiryId
+        if (selectedDeliveryNote?.salesOrder?.quotationId) {
+          const quotationRes = await fetch(`/api/quotations/${selectedDeliveryNote.salesOrder.quotationId}`);
+          if (quotationRes.ok) {
+            const quotationData = await quotationRes.json();
+            enquiryId = quotationData.enquiryId;
+          }
+        }
         // If only quotationId is present, fetch full quotation
         if (!enquiryId && selectedDeliveryNote?.salesOrder?.quotationId) {
           const quotationRes = await fetch(`/api/quotations/${selectedDeliveryNote.salesOrder.quotationId}`);

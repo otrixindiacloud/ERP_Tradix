@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Local tooling and caches
+.playwright-mcp/
+*.log
+*.tsbuildinfo
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

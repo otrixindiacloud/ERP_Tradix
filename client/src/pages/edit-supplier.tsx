@@ -1,6 +1,7 @@
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler, type FieldValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -25,12 +26,12 @@ export default function EditSupplier() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm({
+  } = useForm<z.infer<typeof SupplierEditSchema>>({
     resolver: zodResolver(SupplierEditSchema),
   });
 
   // Fetch supplier details
-  const { data: supplier, isLoading } = useQuery({
+  const { data: supplier, isLoading } = useQuery<any>({
     queryKey: ["/api/suppliers/" + id + "/details"],
     queryFn: async () => {
       const res = await fetch(`/api/suppliers/${id}/details`);
@@ -38,17 +39,21 @@ export default function EditSupplier() {
       return res.json();
     },
     enabled: !!id,
-    onSuccess: (data: any) => {
-      reset({
-        name: data.supplier.name,
-        contactPerson: data.supplier.contactPerson,
-        email: data.supplier.email,
-        phone: data.supplier.phone,
-        address: data.supplier.address,
-        paymentTerms: data.supplier.paymentTerms,
-      });
-    },
   });
+
+  // Sync form when supplier loads
+  React.useEffect(() => {
+    if (supplier?.supplier) {
+      reset({
+        name: supplier.supplier.name,
+        contactPerson: supplier.supplier.contactPerson,
+        email: supplier.supplier.email,
+        phone: supplier.supplier.phone,
+        address: supplier.supplier.address,
+        paymentTerms: supplier.supplier.paymentTerms,
+      });
+    }
+  }, [supplier, reset]);
 
   // Mutation for updating supplier
   const { toast } = useToast();
@@ -71,7 +76,7 @@ export default function EditSupplier() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof SupplierEditSchema>) => {
+  const onSubmit: SubmitHandler<z.infer<typeof SupplierEditSchema>> = (data) => {
     mutation.mutate(data);
   };
 
@@ -88,7 +93,7 @@ export default function EditSupplier() {
             <div>
               <label className="text-sm font-medium">Name</label>
               <Input {...register("name")} />
-              {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+              {errors.name?.message && <p className="text-xs text-red-500">{String(errors.name.message)}</p>}
             </div>
             <div>
               <label className="text-sm font-medium">Contact Person</label>
